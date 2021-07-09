@@ -10,10 +10,12 @@ module Opal
       children :test, :true_body, :false_body
 
       def compile
+        test_body = js_truthy(test)
+
         truthy = self.truthy
         falsy = self.falsy
 
-        push 'if (', js_truthy(test), ') {'
+        push 'if (', test_body, ') {'
 
         # skip if-body if no truthy sexp
         indent { line stmt(truthy) } if truthy
@@ -33,7 +35,7 @@ module Opal
           push '}'
         end
 
-        wrap '(function() {', '; return nil; })()' if needs_wrapper?
+        wrap '(function() {', '})()' if needs_wrapper?
       end
 
       def truthy
@@ -46,6 +48,16 @@ module Opal
 
       def needs_wrapper?
         expr? || recv?
+      end
+    end
+
+    class SimpleIfNode < IfNode
+      handle :simple_if
+
+      def compile
+        test_body = js_truthy(test)
+
+        push "((", test_body, ") ? (", expr(true_body || s(:nil)), ") : (", expr(false_body || s(:nil)), "))"
       end
     end
 

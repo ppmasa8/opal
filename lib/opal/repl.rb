@@ -45,10 +45,14 @@ module Opal
     end
 
     def load_opal
+      # MiniRacer doesn't like to fork. Let's build Opal first
+      # in a forked environment.
+      opal = Opal::Builder.new.build('opal').to_s
+
       v8.attach('console.log', method(:puts).to_proc)
       v8.attach('console.warn', method(:warn).to_proc)
       v8.attach('crypto.randomBytes', method(:random_bytes).to_proc)
-      v8.eval Opal::Builder.new.build('opal').to_s
+      v8.eval opal
       v8.attach('Opal.exit', method(:exit).to_proc)
     end
 

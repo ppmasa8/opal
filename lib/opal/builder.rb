@@ -93,11 +93,9 @@ module Opal
       rel_path = expand_ext(rel_path)
       asset = processor_for(source, rel_path, abs_path, options)
       requires = preload + asset.requires + tree_requires(asset, abs_path)
-      requires.map { |r| process_require(r, options) }
+      process_requires(rel_path, requires, options)
       processed << asset
       self
-    rescue MissingRequire => error
-      raise error, "A file required by #{rel_path.inspect} wasn't found.\n#{error.message}", error.backtrace
     end
 
     def build_require(path, options = {})
@@ -188,10 +186,8 @@ module Opal
       end
     end
 
-    def process_require(rel_path, options)
+    def process_require_threadsafely(rel_path, options)
       return if prerequired.include?(rel_path)
-      return if already_processed.include?(rel_path)
-      already_processed << rel_path
 
       source = stub?(rel_path) ? '' : read(rel_path)
 
@@ -202,7 +198,14 @@ module Opal
       rel_path = expand_ext(rel_path)
       asset = processor_for(source, rel_path, abs_path, options.merge(requirable: true))
       process_requires(rel_path, asset.requires + tree_requires(asset, abs_path), options)
-      processed << asset
+      asset
+    end
+
+    def process_require(rel_path, options)
+      return if already_processed.include?(rel_path)
+      already_processed << rel_path
+
+      processed << process_require_threadsafely(rel_path, options)
     end
 
     def expand_ext(path)
@@ -239,6 +242,14 @@ module Opal
 
     def extensions
       ::Opal::Builder.extensions
+    end
+
+    if RUBY_ENGINE != 'opal'
+      # Windows has a faulty `fork`.
+      unless Gem.win_platform?
+        require 'opal/builder/prefork'
+        prepend Builder::Prefork
+      end
     end
   end
 end

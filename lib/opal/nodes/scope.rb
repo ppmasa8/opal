@@ -328,6 +328,8 @@ module Opal
         @next_retry_id ||= 'retry_0'
         @next_retry_id = @next_retry_id.succ
       end
+
+      attr_accessor :await_encountered
     end
   end
 end

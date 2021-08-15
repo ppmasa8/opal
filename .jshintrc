@@ -37,5 +37,12 @@
   // Keeping these:
   "-W061": false, // eval can be harmful
   "-W086": false, // Expected a 'break' statement before 'case'
-  "-W100": false  // This character may get silently deleted by one or more browsers
+  "-W100": false,  // This character may get silently deleted by one or more browsers
+
+  "overrides": {
+    "tmp/lint/await.js": {
+      "es3": false,
+      "esversion": 8 // We use async/await in this file, but not in the others
+    }
+  }
 }

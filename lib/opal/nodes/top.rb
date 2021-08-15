@@ -58,7 +58,7 @@ module Opal
         elsif compiler.eval?
           unshift "#{aw}(#{as}function(Opal, self) {"
         else
-          unshift "(#{as}function(Opal) {"
+          unshift "Opal.queue(#{as}function(Opal) {"
         end
       end
 
@@ -73,7 +73,7 @@ module Opal
         elsif compiler.eval?
           line "})(Opal, self)#{aw};"
         else
-          line "})(Opal);\n"
+          line "});\n"
         end
       end
 

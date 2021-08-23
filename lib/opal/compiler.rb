@@ -159,6 +159,11 @@ module Opal
     # Adds comments for every method definition
     compiler_option :parse_comments, default: false, as: :parse_comments?
 
+    # @!method debug_source_maps?
+    #
+    # Displays fragments missing mapping in red
+    compiler_option :debug_source_maps, default: false, as: :debug_source_maps?
+
     # @return [String] The compiled ruby code
     attr_reader :result
 
@@ -200,7 +205,17 @@ module Opal
       @fragments = re_raise_with_location { process(@sexp).flatten }
       @fragments << fragment("\n", nil, s(:newline)) unless @fragments.last.code.end_with?("\n")
 
-      @result = @fragments.map(&:code).join('')
+      if debug_source_maps?
+        @result = @fragments.map do |fragment|
+          if [0, nil].include? fragment.line
+            "\e[31m#{fragment.code}\e[39m"
+          else
+            fragment.code
+          end
+        end.join('')
+      else
+        @result = @fragments.map(&:code).join('')
+      end
     end
 
     def parse
